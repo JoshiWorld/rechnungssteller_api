@@ -1,0 +1,109 @@
+GET http://localhost:3001/order/42c730f59c3b3befd34649bdcaf6d429dcfdffa57dcec14d110c9d0d7fbee649c9f82dfdca52c2e4a17df57e49ae88f201f488eb2b4e5b20a7c698a6159a7a1db9770e4d2f37a2136b426218855cbbf891855624fa092538a322dcf98dc570c7547dcb97386bda3beea5a9f01cb9372ac6f45f8eefbeef296207da
+Accept: application/json
+
+###
+POST http://localhost:3001/user/create
+Content-Type: application/json
+Accept: application/json
+
+{
+  "user": {
+    "email": "",
+    "forename": "",
+    "surname": "",
+    "street": "",
+    "zip": 0,
+    "city": "",
+    "country": ""
+  }
+}
+
+###
+POST http://localhost:3001/order/create
+Content-Type: application/json
+Accept: application/json
+
+{
+  "order": {
+    "email": "tessdsdt@test.de",
+    "title": "Test Anfrage"
+  }
+}
+
+###
+POST http://localhost:3001/order/addArticles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "order": {
+    "id": 17,
+    "articles": [
+      "1",
+      "1",
+      "1"
+    ]
+  }
+}
+
+###
+GET http://localhost:3001/order/list/get
+
+###
+POST http://localhost:3001/master/create
+Content-Type: application/json
+Accept: application/json
+
+{
+  "user": {
+    "role": "admin",
+    "password": "Erdnuss123?"
+  }
+}
+
+###
+GET http://localhost:3001/master/get?password=Erdnuss123?
+Content-Type: application/json
+Accept: application/json
+
+###
+POST http://localhost:3001/order/sendOrder
+Content-Type: application/json
+Accept: application/json
+
+{
+  "order": {
+    "invoice": "1234562023",
+    "user": {
+      "forename": "Max",
+      "surname": "Mustermann",
+      "street": "Teststraße 1a",
+      "zip": "12345",
+      "city": "Berlin",
+      "country": "Deutschland",
+      "email": "joshua.stieber.1903@gmail.com"
+    },
+    "articles": [
+      {
+        "price": 25.00,
+        "title": "Mix & Master",
+        "description": "Song Mix & Master Service"
+      },
+      {
+        "price": 25.00,
+        "title": "Mix & Master",
+        "description": "Song Mix & Master Service"
+      },
+      {
+        "price": 25.00,
+        "title": "Mix & Master",
+        "description": "Song Mix & Master Service"
+      },
+      {
+        "price": 35.00,
+        "title": "Exclusive Beat",
+        "description": "Exklusive Beatproduktion"
+      }
+    ]
+  }
+}
