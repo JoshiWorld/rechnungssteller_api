@@ -427,7 +427,15 @@ function getOrders(callback) {
             return;
         }
 
-        connection.query('SELECT * FROM orders', (error, results) => {
+        const query = `
+            SELECT orders.*, users.id AS user_id, users.email, users.forename, users.surname, users.street, users.zip, users.city, users.country, articles.id AS article_id, articles.title AS article_title, articles.price AS article_price, articles.description AS article_description
+            FROM orders
+            LEFT JOIN order_articles ON orders.id = order_articles.order_id
+            LEFT JOIN articles ON order_articles.article_id = articles.id
+            LEFT JOIN users ON orders.user_id = users.id
+        `;
+
+        connection.query(query, (error, results) => {
             connection.release(); // Release the connection back to the pool
 
             if (error) {
@@ -436,10 +444,54 @@ function getOrders(callback) {
                 return;
             }
 
-            callback(null, results);
+            const orders = [];
+
+            results.forEach(row => {
+                const orderId = row.id;
+
+                // Check if the order already exists in the orders array
+                let existingOrder = orders.find(order => order.id === orderId);
+
+                if (!existingOrder) {
+                    existingOrder = {
+                        id: row.id,
+                        title: row.title,
+                        invoice: row.invoice,
+                        user: {
+                            id: row.user_id,
+                            email: row.email,
+                            forename: row.forename,
+                            surname: row.surname,
+                            street: row.street,
+                            zip: row.zip,
+                            city: row.city,
+                            country: row.country
+                        },
+                        paid: row.paid,
+                        uuid: row.uuid,
+                        articles: []
+                    };
+
+                    orders.push(existingOrder);
+                }
+
+                // Add articles to the order if they exist
+                if (row.article_id) {
+                    const article = {
+                        title: row.article_title,
+                        price: parseFloat(row.article_price),
+                        description: row.article_description
+                    };
+                    existingOrder.articles.push(article);
+                }
+            });
+
+            callback(null, orders);
         });
     });
 }
+
+
 
 async function createOrder(order, callback) {
     const uuid = generateUUID(); // Generate random UUID code
@@ -624,6 +676,68 @@ function updateOrder(orderUUID, updatedOrder, callback) {
 }
 
 
+function deleteOrder(orderId, callback) {
+    pool.getConnection(async (err, connection) => {
+        if (err) {
+            console.error('Error connecting to database:', err);
+            callback(err, null);
+            return;
+        }
+
+        try {
+            const query = `DELETE FROM order_articles WHERE order_id = ?; DELETE FROM orders WHERE id = ?`;
+            const values = [orderId, orderId]; // Pass orderId twice to match the placeholders
+
+            connection.query(query, values, (error, results) => {
+                connection.release(); // Release the connection back to the pool
+
+                if (error) {
+                    console.error('Error executing query:', error);
+                    callback(error, null);
+                    return;
+                }
+
+                callback(null, results[1].affectedRows); // Return affectedRows from the second query (orders table)
+            });
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            callback(error, null);
+        }
+    });
+}
+
+function updateOrderToPaid(orderId, callback) {
+    pool.getConnection(async (err, connection) => {
+        if (err) {
+            console.error('Error connecting to database:', err);
+            callback(err, null);
+            return;
+        }
+
+        try {
+            const query = `UPDATE orders SET paid = ? WHERE id = ?`;
+            const values = [1, orderId]; // Pass orderId twice to match the placeholders
+
+            connection.query(query, values, (error, results) => {
+                connection.release(); // Release the connection back to the pool
+
+                if (error) {
+                    console.error('Error executing query:', error);
+                    callback(error, null);
+                    return;
+                }
+
+                callback(null, results.affectedRows); // Return affectedRows from the second query (orders table)
+            });
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            callback(error, null);
+        }
+    });
+}
+
+
+
 function getOrder(orderId, callback) {
     pool.getConnection((err, connection) => {
         if (err) {
@@ -702,6 +816,8 @@ module.exports = {
     createOrder,
     updateOrder,
     addArticlesToOrder,
+    deleteOrder,
+    updateOrderToPaid,
 
     // ARTICLE
     getArticle,

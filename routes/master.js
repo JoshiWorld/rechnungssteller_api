@@ -47,16 +47,14 @@ router.get('/get', function(req, res) {
 
 router.get('/verify', function(req, res) {
     const token = req.query.token;
-    
-    try {
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-        // If verification succeeds, the token is valid
-        res.status(200);
-    } catch (error) {
-        // If verification fails, the token is invalid or expired
-        res.status(401).json({ message: 'Unauthorized' });
-    }
+    jwt.verify(token, process.env.JWT_SECRET, (error, decodedToken) => {
+        if (error) {
+            // If verification fails, the token is invalid or expired
+            res.status(401).json({ message: 'Unauthorized' });
+        } else {
+            res.status(200).json({ message: 'Token verified' });
+        }
+    });
 });
-
 module.exports = router;

@@ -3,6 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const cors = require('cors');
 require('dotenv').config();
 
 var indexRouter = require('./routes/index');
@@ -23,18 +24,28 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+const corsOptions = {
+  origin: 'https://shop.brokoly.de',
+};
+
+app.use(cors(corsOptions));
+
+/*
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:4200');
+  res.header('Access-Control-Allow-Origin', 'http://shop.brokoly.de');
+  //res.header('Access-Control-Allow-Origin', 'http://localhost');
+  //res.header('Access-Control-Allow-Origin', req.headers.origin);
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   next();
 });
+*/
 
-app.use('/', indexRouter);
-app.use('/order', orderRouter);
-app.use('/user', userRouter);
-app.use('/article', articleRouter);
-app.use('/master', masterRouter);
+app.use('/api/', indexRouter);
+app.use('/api/order', orderRouter);
+app.use('/api/user', userRouter);
+app.use('/api/article', articleRouter);
+app.use('/api/master', masterRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
